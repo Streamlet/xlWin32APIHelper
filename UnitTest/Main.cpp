@@ -1,6 +1,7 @@
 #include "../External/xlUnitTest/UnitTest.h"
 #include "../FilePath.h"
 #include "../FileScanner.h"
+#include "../FileOP.h"
 #include <functional>
 
 XL_NAMED_TEST_CASE(PathNormalize)
@@ -32,12 +33,11 @@ XL_TEST_CASE()
 {
     using namespace xl::Win32::File;
 
-    //CreateDirectory(L"a", NULL);
-    //EnumFiles();
 }
 
 int main()
 {
-    CreateDirectoryW(L"a\\b\\c", NULL);
+    xl::Win32::File::MakeDir(L"a\\b\\\\c");
+    xl::Win32::File::RMDir(L"a");
     return 0;
 }

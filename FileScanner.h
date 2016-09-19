@@ -43,9 +43,10 @@ namespace xl
                 WIN32_FIND_DATAW wfd = {};
 
                 strPath.append(lpszFile);
-                HANDLE hFind = FindFirstFileW(strPath.c_str(), &wfd);
+                HANDLE hFind = ::FindFirstFileW(strPath.c_str(), &wfd);
                 if (hFind == INVALID_HANDLE_VALUE)
                     return false;
+                strPath.resize(nLen);
 
                 do
                 {
@@ -79,9 +80,9 @@ namespace xl
 
                     strPath.resize(nLen);
 
-                } while (FindNextFileW(hFind, &wfd));
+                } while (::FindNextFileW(hFind, &wfd));
 
-                FindClose(hFind);
+                ::FindClose(hFind);
                 return true;
             }
         }

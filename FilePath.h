@@ -2,15 +2,15 @@
 //
 //    Copyright (C) Streamlet. All rights reserved.
 //
-//    File Name:   Path.h
+//    File Name:   FilePath.h
 //    Author:      Streamlet
-//    Create Time: 2016-09-15
+//    Create Time: 2016-09-20
 //    Description: 
 //
 //------------------------------------------------------------------------------
 
-#ifndef __PATH_H_1400E3A8_4978_4AEF_909F_643C06218D08_INCLUDED__
-#define __PATH_H_1400E3A8_4978_4AEF_909F_643C06218D08_INCLUDED__
+#ifndef __FILEPATH_H_398A9DC3_D0A4_466A_9FC5_A9094ECC1DE1_INCLUDED__
+#define __FILEPATH_H_398A9DC3_D0A4_466A_9FC5_A9094ECC1DE1_INCLUDED__
 
 
 #include <Windows.h>
@@ -37,4 +37,4 @@ namespace xl
     }
 }
 
-#endif // #ifndef __PATH_H_1400E3A8_4978_4AEF_909F_643C06218D08_INCLUDED__
+#endif // #ifndef __FILEPATH_H_398A9DC3_D0A4_466A_9FC5_A9094ECC1DE1_INCLUDED__
