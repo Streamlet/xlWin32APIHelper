@@ -28,7 +28,7 @@ namespace xl
             {
                 std::wstring s;
                 s.resize(MAX_PATH);
-                if (!PathCanonicalize(&s[0], lpszPath))
+                if (!PathCanonicalizeW(&s[0], lpszPath))
                     return L"";
                 s.resize(wcslen(s.c_str()));
                 return s;

@@ -1,6 +1,6 @@
-#include <xl/UnitTest/UnitTest.h>
-#include "../../Include/File/Path.h"
-#include "../../Include/File/Scanner.h"
+#include "../External/xlUnitTest/UnitTest.h"
+#include "../FilePath.h"
+#include "../FileScanner.h"
 #include <functional>
 
 XL_NAMED_TEST_CASE(PathNormalize)
@@ -38,6 +38,6 @@ XL_TEST_CASE()
 
 int main()
 {
-    CreateDirectory(L"a\\b\\c", NULL);
+    CreateDirectoryW(L"a\\b\\c", NULL);
     return 0;
 }

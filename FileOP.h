@@ -15,7 +15,7 @@
 
 #include <Windows.h>
 #include <string>
-#include <stdex/string.h>
+#include "External/stdex/string.h"
 
 namespace xl
 {
