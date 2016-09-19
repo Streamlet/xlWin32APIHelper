@@ -1,0 +1,6 @@
+[submodule "External/stdex"]
+	path = External/stdex
+	url = https://github.com/Streamlet/stdex.git
+[submodule "External/xlUnitTest"]
+	path = External/xlUnitTest
+	url = https://github.com/Streamlet/xlUnitTest.git
