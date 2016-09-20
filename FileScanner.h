@@ -25,11 +25,12 @@ namespace xl
             enum
             {
                 ENUM_RECURSIVELY    = 0x01,
-                ENUM_DIRECTORY      = 0x04,
-                ENUM_EXCLUDE_FILES  = 0x08,
+                ENUM_SUB_FIRST      = 0x08,
+                ENUM_NO_DIRECTORIES = 0x02,
+                ENUM_NO_FILES       = 0x04,
             };
 
-            typedef bool (*ENUM_FILE_PROC)(LPCWSTR, LPVOID);
+            typedef bool (*ENUM_FILE_PROC)(LPCWSTR, DWORD, LPVOID);
             template <typename Callback>
             bool EnumFiles(LPCWSTR lpszDir, LPCWSTR lpszFile, DWORD dwFlags, Callback callback, LPVOID lpParam)
             {
@@ -57,9 +58,9 @@ namespace xl
 
                     if ((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
                     {
-                        if (dwFlags & ENUM_DIRECTORY)
+                        if (!(dwFlags & ENUM_NO_DIRECTORIES) && !(dwFlags & ENUM_SUB_FIRST))
                         {
-                            if (!callback(strPath.c_str(), lpParam))
+                            if (!callback(strPath.c_str(), wfd.dwFileAttributes, lpParam))
                                 break;
                         }
 
@@ -68,12 +69,18 @@ namespace xl
                             if (!EnumFiles(strPath.c_str(), lpszFile, dwFlags, callback, lpParam))
                                 break;
                         }
+
+                        if (!(dwFlags & ENUM_NO_DIRECTORIES) && (dwFlags & ENUM_SUB_FIRST))
+                        {
+                            if (!callback(strPath.c_str(), wfd.dwFileAttributes,  lpParam))
+                                break;
+                        }
                     }
                     else
                     {
-                        if (!(dwFlags & ENUM_EXCLUDE_FILES))
+                        if (!(dwFlags & ENUM_NO_FILES))
                         {
-                            if (!callback(strPath.c_str(), lpParam))
+                            if (!callback(strPath.c_str(), wfd.dwFileAttributes, lpParam))
                                 break;
                         }
                     }

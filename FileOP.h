@@ -46,23 +46,87 @@ namespace xl
             bool RMDir(LPCWSTR lpszPath)
             {
                 assert(lpszPath && lpszPath[0] != L'\\');
-                if (!EnumFiles(lpszPath, L"*", ENUM_RECURSIVELY | ENUM_DIRECTORY | ENUM_EXCLUDE_FILES, [](LPCWSTR lpszFile, LPVOID lpParam)
-                    {
-                        return RMDir(lpszFile);
-                    }, NULL))
+                if (!EnumFiles(lpszPath, L"*", ENUM_RECURSIVELY | ENUM_SUB_FIRST, [](LPCWSTR lpszFile, DWORD dwAttr, LPVOID lpParam)
                 {
-                    return false;
-                }
-
-                if (!EnumFiles(lpszPath, L"*", 0, [](LPCWSTR lpszFile, LPVOID lpParam)
-                    {
+                    if (dwAttr & FILE_ATTRIBUTE_DIRECTORY)
+                        return !!::RemoveDirectoryW(lpszFile);
+                    else
                         return !!::DeleteFileW(lpszFile);
-                    }, NULL))
+                }, NULL))
                 {
                     return false;
                 }
 
                 return !!::RemoveDirectoryW(lpszPath);
+            }
+
+            typedef bool(*GET_CONTENT_PROC)(LPCVOID, size_t, LPVOID);
+            template <typename Callback>
+            bool GetContent(LPCWSTR lpszPath, Callback callback, LPVOID lpParam)
+            {
+                DWORD dwAttr = ::GetFileAttributesW(lpszPath);
+                HANDLE hFile = ::CreateFileW(lpszPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, dwAttr, NULL);
+                if (hFile == INVALID_HANDLE_VALUE)
+                    return false;
+                bool bRet = false;
+
+                LARGE_INTEGER li = {};
+                if (!::GetFileSizeEx(hFile, &li) || li.HighPart != 0)
+                    goto EXIT;
+                HANDLE hMap = ::CreateFileMapping(hFile, NULL, PAGE_READONLY, li.HighPart, li.LowPart, NULL);
+                if (hMap == NULL)
+                    goto EXIT;
+                LPCVOID lpMemory = ::MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, (SIZE_T)li.QuadPart);
+                if (lpMemory == NULL)
+                    goto EXIT;
+                bRet = callback(lpMemory, (size_t)li.QuadPart, lpParam);
+            EXIT:
+                if (lpMemory)
+                    UnmapViewOfFile(lpMemory);
+                if (hMap)
+                    CloseHandle(hMap);
+                if (hFile)
+                    CloseHandle(hFile);
+                return bRet;
+            }
+
+            std::string GetContent(LPCWSTR lpszPath)
+            {
+                std::string strRet;
+                GetContent(lpszPath, [&strRet](LPCVOID lpBuffer, size_t cbSize, LPVOID lpParam)
+                {
+                    strRet.assign((const char *)lpBuffer, cbSize);
+                    return true;
+                }, NULL);
+                return strRet;
+            }
+
+            bool SetContent(LPCWSTR lpszPath, LPCVOID lpBuffer, size_t cbSize, bool bAppend = false)
+            {
+                DWORD dwAttr = ::GetFileAttributesW(lpszPath);
+                HANDLE hFile = ::CreateFileW(lpszPath, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, dwAttr == INVALID_FILE_ATTRIBUTES ? 0 : dwAttr, NULL);
+                if (hFile == INVALID_HANDLE_VALUE)
+                    return false;
+                bool bRet = false;
+
+                LARGE_INTEGER li = {};
+                if (!SetFilePointerEx(hFile, li, &li, bAppend ? FILE_END : FILE_BEGIN))
+                    goto EXIT;
+                DWORD dwWritten = 0;
+                if (!WriteFile(hFile, lpBuffer, cbSize, &dwWritten, NULL) || dwWritten != cbSize)
+                    goto EXIT;
+                if (!SetEndOfFile(hFile))
+                    goto EXIT;
+                bRet = true;
+            EXIT:
+                if (hFile)
+                    CloseHandle(hFile);
+                return bRet;
+            }
+
+            bool SetContent(LPCWSTR lpszPath, const std::string &strContent, bool bAppend = false)
+            {
+                return SetContent(lpszPath, strContent.c_str(), strContent.length(), bAppend);
             }
         }
     }

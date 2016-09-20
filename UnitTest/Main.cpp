@@ -39,5 +39,14 @@ int main()
 {
     xl::Win32::File::MakeDir(L"a\\b\\\\c");
     xl::Win32::File::RMDir(L"a");
+    std::string s = "123";
+    xl::Win32::File::SetContent(L"a.txt", s);
+    std::string t = xl::Win32::File::GetContent(L"a.txt");
+    s = "abc";
+    xl::Win32::File::SetContent(L"a.txt", s);
+    t = xl::Win32::File::GetContent(L"a.txt");
+    s = "xyz";
+    xl::Win32::File::SetContent(L"a.txt", s, true);
+    t = xl::Win32::File::GetContent(L"a.txt");
     return 0;
 }
