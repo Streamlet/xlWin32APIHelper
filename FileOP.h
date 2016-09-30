@@ -37,8 +37,11 @@ namespace xl
                         continue;
                     size_t i = (ss.c_str() - strPath.c_str()) + ss.length();
                     strPath[i] = L'\0';
-                    if (!::CreateDirectoryW(strPath.c_str(), NULL))
-                        return false;
+                    if (GetFileAttributesW(strPath.c_str()) == INVALID_FILE_ATTRIBUTES)
+                    {
+                        if (!::CreateDirectoryW(strPath.c_str(), NULL))
+                            return false;
+                    }
                     strPath[i] = L'\\';
                 }
                 return true;
@@ -59,6 +62,11 @@ namespace xl
                 }
 
                 return !!::RemoveDirectoryW(lpszPath);
+            }
+
+            bool RMFile(LPCWSTR lpszPath)
+            {
+                return !!::DeleteFileW(lpszPath);
             }
 
             typedef bool(*GET_CONTENT_PROC)(LPCVOID, size_t, LPVOID);
@@ -111,6 +119,11 @@ namespace xl
                 if (!SetEndOfFile(hFile))
                     return false;
                 return true;
+            }
+
+            bool SetContent(LPCWSTR lpszPath, const char *lpszContent, bool bAppend = false)
+            {
+                return SetContent(lpszPath, lpszContent, stdex::str_length(lpszContent), bAppend);
             }
 
             bool SetContent(LPCWSTR lpszPath, const std::string &strContent, bool bAppend = false)

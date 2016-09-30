@@ -15,6 +15,7 @@
 
 #include <Windows.h>
 #include <string>
+#include <vector>
 
 namespace xl
 {
@@ -91,6 +92,17 @@ namespace xl
 
                 ::FindClose(hFind);
                 return true;
+            }
+
+            std::vector<std::wstring> GetFileList(LPCWSTR lpszDir, LPCWSTR lpszFile, DWORD dwFlags)
+            {
+                std::vector<std::wstring> vecFiles;
+                EnumFiles(lpszDir, lpszFile, dwFlags, [&vecFiles](LPCWSTR lpszFile, DWORD dwAttr, LPVOID lpParam)
+                {
+                    vecFiles.push_back(lpszFile);
+                    return true;
+                }, nullptr);
+                return vecFiles;
             }
         }
     }
