@@ -29,9 +29,12 @@ XL_NAMED_TEST_CASE(PathNormalize)
     XL_TEST_ASSERT(PathNormalize(L"C:\\.") == L"C:\\");
 }
 
-XL_TEST_CASE()
+XL_NAMED_TEST_CASE(DirOps)
 {
     using namespace xl::Win32::File;
+
+    MakeDir(L"a\\b\\c");
+    MakeDir(L"a\\b\\c");
 
 }
 

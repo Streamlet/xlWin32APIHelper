@@ -17,6 +17,7 @@
 #include <string>
 #include <assert.h>
 #include "External/stdex/string.h"
+#include "External/stdex/scope_exit.h"
 #include "FileScanner.h"
 
 namespace xl
@@ -68,26 +69,19 @@ namespace xl
                 HANDLE hFile = ::CreateFileW(lpszPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, dwAttr, NULL);
                 if (hFile == INVALID_HANDLE_VALUE)
                     return false;
-                bool bRet = false;
-
+                STDEX_ON_BLOCK_EXIT(CloseHandle, hFile);
                 LARGE_INTEGER li = {};
                 if (!::GetFileSizeEx(hFile, &li) || li.HighPart != 0)
-                    goto EXIT;
+                    return false;
                 HANDLE hMap = ::CreateFileMapping(hFile, NULL, PAGE_READONLY, li.HighPart, li.LowPart, NULL);
                 if (hMap == NULL)
-                    goto EXIT;
+                    return false;
+                STDEX_ON_BLOCK_EXIT(CloseHandle, hMap);
                 LPCVOID lpMemory = ::MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, (SIZE_T)li.QuadPart);
                 if (lpMemory == NULL)
-                    goto EXIT;
-                bRet = callback(lpMemory, (size_t)li.QuadPart, lpParam);
-            EXIT:
-                if (lpMemory)
-                    UnmapViewOfFile(lpMemory);
-                if (hMap)
-                    CloseHandle(hMap);
-                if (hFile)
-                    CloseHandle(hFile);
-                return bRet;
+                    return false;
+                STDEX_ON_BLOCK_EXIT(UnmapViewOfFile, lpMemory);
+                return callback(lpMemory, (size_t)li.QuadPart, lpParam);
             }
 
             std::string GetContent(LPCWSTR lpszPath)
@@ -107,21 +101,16 @@ namespace xl
                 HANDLE hFile = ::CreateFileW(lpszPath, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, dwAttr == INVALID_FILE_ATTRIBUTES ? 0 : dwAttr, NULL);
                 if (hFile == INVALID_HANDLE_VALUE)
                     return false;
-                bool bRet = false;
-
+                STDEX_ON_BLOCK_EXIT(CloseHandle, hFile);
                 LARGE_INTEGER li = {};
                 if (!SetFilePointerEx(hFile, li, &li, bAppend ? FILE_END : FILE_BEGIN))
-                    goto EXIT;
+                    return false;
                 DWORD dwWritten = 0;
                 if (!WriteFile(hFile, lpBuffer, cbSize, &dwWritten, NULL) || dwWritten != cbSize)
-                    goto EXIT;
+                    return false;
                 if (!SetEndOfFile(hFile))
-                    goto EXIT;
-                bRet = true;
-            EXIT:
-                if (hFile)
-                    CloseHandle(hFile);
-                return bRet;
+                    return false;
+                return true;
             }
 
             bool SetContent(LPCWSTR lpszPath, const std::string &strContent, bool bAppend = false)
